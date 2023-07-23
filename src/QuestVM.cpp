@@ -13,7 +13,7 @@ extern "C" {
     #include <json_ez.h>
 }
 
-#include "Example.h"
+#include "QuestVM.h"
 
 char* _copy(const char* orig) {
     char *res = new char[strlen(orig)+1];
@@ -21,47 +21,47 @@ char* _copy(const char* orig) {
     return res;
 }
 
-// Instance map to store mapping of TzoVM to Example instance
-std::map<TzoVM *, Example *> Example::instanceMap;
+// Instance map to store mapping of TzoVM to QuestVM instance
+std::map<TzoVM *, QuestVM *> QuestVM::instanceMap;
 
 // Free function to act as wrapper for emit foreign function
-void Example::emitWrapper(TzoVM *vm) {
-    Example *instance = instanceMap[vm];
+void QuestVM::emitWrapper(TzoVM *vm) {
+    QuestVM *instance = instanceMap[vm];
     instance->emit();
 }
 
-void Example::getresponseWrapper(TzoVM *vm) {
-    Example *instance = instanceMap[vm];
+void QuestVM::getresponseWrapper(TzoVM *vm) {
+    QuestVM *instance = instanceMap[vm];
     instance->getresponse();
 }
 
 // Used to mark unused parameters to indicate intent and suppress warnings.
 #define UNUSED( expr ) (void)( expr )
 
-//// Example
+//// QuestVM
 
-Example::Example()
+QuestVM::QuestVM()
 {
     godot::UtilityFunctions::print( "Constructor." );
 }
 
-Example::~Example()
+QuestVM::~QuestVM()
 {
     godot::UtilityFunctions::print( "Destructor." );
 }
 
 // Methods.
-void Example::simpleFunc()
+void QuestVM::simpleFunc()
 {
     godot::UtilityFunctions::print( "  Simple func called." );
 }
 
-void Example::emit() {
+void QuestVM::emit() {
     char *str = asString(_pop(vm));
     emit_signal("questvm_emit", godot::String(str));
 }
 
-void Example::getresponse() {
+void QuestVM::getresponse() {
     ::pause(vm);
 
     emit_signal("questvm_getresponse_start");
@@ -83,14 +83,14 @@ void Example::getresponse() {
     //emit_signal("questvm_getresponse", godot::String(str));
 }
 
-void Example::initTzoVM()
+void QuestVM::initTzoVM()
 {
     vm = createTzoVM();
     instanceMap[vm] = this;
     struct json_value_s *root = loadFileGetJSON(vm, const_cast<char*>(filepath.ascii().get_data()));
     ::initRuntime(vm);
-    registerForeignFunction(vm, "emit", &Example::emitWrapper);
-    registerForeignFunction(vm, "getResponse", &Example::getresponseWrapper);
+    registerForeignFunction(vm, "emit", &QuestVM::emitWrapper);
+    registerForeignFunction(vm, "getResponse", &QuestVM::getresponseWrapper);
     registerForeignFunction(vm, "response", &response);
     struct json_object_s *rootObj = json_value_as_object(root);
     struct json_array_s *inputProgram = get_object_key_as_array(rootObj, "programList");
@@ -102,46 +102,46 @@ void Example::initTzoVM()
     ::initQuestVM();
 }
 
-void Example::run()
+void QuestVM::run()
 {
     ::run(vm);
 }
 
-void Example::pushNumber(float num)
+void QuestVM::pushNumber(float num)
 {
     _push(vm, *makeNumber(num));
 }
 
-void Example::pushString(godot::String str)
+void QuestVM::pushString(godot::String str)
 {
     _push(vm, *makeString(_copy(str.ascii().get_data())));
 }
 
-void Example::clearResponseMap() {
+void QuestVM::clearResponseMap() {
     ::clearResponseMap();
 }
 
-void Example::set_file_path(godot::String str) {
+void QuestVM::set_file_path(godot::String str) {
     filepath = str;
 }
 
-godot::String Example::get_file_path() {
+godot::String QuestVM::get_file_path() {
     return filepath;
 }
 
 
-void Example::_bind_methods()
+void QuestVM::_bind_methods()
 {
     // Methods.
-    godot::ClassDB::bind_method( godot::D_METHOD( "pushNumber", "num" ), &Example::pushNumber );
-    godot::ClassDB::bind_method( godot::D_METHOD( "pushString", "str" ), &Example::pushString );
-    godot::ClassDB::bind_method( godot::D_METHOD( "clearResponseMap" ), &Example::clearResponseMap );
-    godot::ClassDB::bind_method( godot::D_METHOD( "initTzoVM" ), &Example::initTzoVM );
-    godot::ClassDB::bind_method( godot::D_METHOD( "run" ), &Example::run );
+    godot::ClassDB::bind_method( godot::D_METHOD( "pushNumber", "num" ), &QuestVM::pushNumber );
+    godot::ClassDB::bind_method( godot::D_METHOD( "pushString", "str" ), &QuestVM::pushString );
+    godot::ClassDB::bind_method( godot::D_METHOD( "clearResponseMap" ), &QuestVM::clearResponseMap );
+    godot::ClassDB::bind_method( godot::D_METHOD( "initTzoVM" ), &QuestVM::initTzoVM );
+    godot::ClassDB::bind_method( godot::D_METHOD( "run" ), &QuestVM::run );
 
     // Properties.
-	godot::ClassDB::bind_method(godot::D_METHOD("get_file_path"), &Example::get_file_path);
-	godot::ClassDB::bind_method(godot::D_METHOD("set_file_path", "path"), &Example::set_file_path);
+	godot::ClassDB::bind_method(godot::D_METHOD("get_file_path"), &QuestVM::get_file_path);
+	godot::ClassDB::bind_method(godot::D_METHOD("set_file_path", "path"), &QuestVM::set_file_path);
     ADD_PROPERTY(godot::PropertyInfo(godot::Variant::STRING, "file_path"), "set_file_path", "get_file_path");
 
     // Signals.

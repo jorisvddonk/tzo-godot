@@ -6,7 +6,7 @@
 #include "godot_cpp/core/defs.hpp"
 #include "godot_cpp/godot.hpp"
 
-#include "Example.h"
+#include "QuestVM.h"
 #include "GDExtensionTemplate.h"
 
 /// @file
@@ -25,7 +25,7 @@ namespace
         {
             return;
         }
-        godot::ClassDB::register_class<Example>();
+        godot::ClassDB::register_class<QuestVM>();
         godot::ClassDB::register_class<GDExtensionTemplate>();
     }
 

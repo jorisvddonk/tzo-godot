@@ -11,13 +11,13 @@ extern "C" {
     #include <tzo.h>
 }
 
-class Example : public godot::Node
+class QuestVM : public godot::Node
 {
-    GDCLASS( Example, godot::Node )
+    GDCLASS( QuestVM, godot::Node )
 
 public:
-    Example();
-    ~Example() override;
+    QuestVM();
+    ~QuestVM() override;
 
     // Functions.
     void initTzoVM();
@@ -28,8 +28,8 @@ public:
     void clearResponseMap();
     void pushNumber(float num);
     void pushString(godot::String str);
-    void Example::set_file_path(godot::String str);
-    godot::String Example::get_file_path();
+    void QuestVM::set_file_path(godot::String str);
+    godot::String QuestVM::get_file_path();
 
 protected:
     static void _bind_methods();
@@ -39,5 +39,5 @@ private:
     godot::String filepath;
     static void emitWrapper(TzoVM *vm);
     static void getresponseWrapper(TzoVM *vm);
-    static std::map<TzoVM *, Example *> instanceMap;
+    static std::map<TzoVM *, QuestVM *> instanceMap;
 };

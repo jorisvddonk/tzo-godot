@@ -56,7 +56,7 @@ More usage information and documentation follows later.
 For now, consider the following code example:
 
 ```GDScript
-extends Example
+extends QuestVM
 @export var textBox: RichTextLabel
 @export var buttonGroup: GridContainer
 
