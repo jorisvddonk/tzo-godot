@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
 
 cmake_minimum_required( VERSION 3.22 )
 
@@ -126,4 +126,6 @@ set_target_properties( godot-cpp
 target_link_libraries( ${PROJECT_NAME}
     PRIVATE
         godot-cpp
+        "../extern/tzo-c/tzo"
+        "../extern/tzo-c/questvm"
 )
