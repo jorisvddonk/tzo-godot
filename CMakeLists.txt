@@ -27,7 +27,7 @@ if ( APPLE )
 endif()
 
 # Main project information
-project( questvm-godot
+project( tzo-godot
     LANGUAGES
         CXX
         C
@@ -52,7 +52,7 @@ endif()
 
 # LIB_DIR is where the actual library ends up. This is used in both the build directory and the
 # install directory and needs to be consistent with the paths in the gdextension file.
-#   e.g. linux.release.x86_64 = "lib/Linux-x86_64/libquestvm-godot.so"
+#   e.g. linux.release.x86_64 = "lib/Linux-x86_64/libtzo-godot.so"
 set( LIB_DIR "lib/${CMAKE_SYSTEM_NAME}-${LIB_ARCH}" )
 
 message( STATUS "Building ${PROJECT_NAME} for ${LIB_ARCH} on ${CMAKE_SYSTEM_NAME}")
@@ -117,6 +117,7 @@ endif()
 set( GODOT_CPP_SYSTEM_HEADERS ON CACHE BOOL "" FORCE )
 
 add_subdirectory( extern/godot-cpp )
+add_subdirectory( extern/tzo-c )
 
 set_target_properties( godot-cpp
     PROPERTIES
@@ -126,6 +127,6 @@ set_target_properties( godot-cpp
 target_link_libraries( ${PROJECT_NAME}
     PRIVATE
         godot-cpp
-        "../extern/tzo-c/tzo"
-        "../extern/tzo-c/questvm"
+        tzo
+        questvm
 )
