@@ -1,0 +1,14 @@
+#ifndef VERSION_H
+#define VERSION_H
+
+#include <string>
+
+namespace VersionInfo {
+    const std::string PROJECT_NAME = "@PROJECT_NAME@";
+    const std::string PROJECT_VERSION = "@PROJECT_VERSION@";
+    const std::string GIT_COMMIT_HASH = "@GIT_SHA1@";
+    const std::string GIT_VERSION = "@GIT_SHORT@";
+    const std::string VERSION_STR = PROJECT_NAME + " " + GIT_VERSION;
+}
+
+#endif // VERSION_H

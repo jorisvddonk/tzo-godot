@@ -28,8 +28,8 @@ public:
     void clearResponseMap();
     void pushNumber(float num);
     void pushString(godot::String str);
-    void QuestVM::set_file_path(godot::String str);
-    godot::String QuestVM::get_file_path();
+    void set_file_path(godot::String str);
+    godot::String get_file_path();
 
 protected:
     static void _bind_methods();

@@ -17,7 +17,7 @@ extern "C" {
 
 char* _copy(const char* orig) {
     char *res = new char[strlen(orig)+1];
-    strcpy_s(res, sizeof res, orig);
+    strcpy(res, orig);
     return res;
 }
 
@@ -89,12 +89,12 @@ void QuestVM::initTzoVM()
     instanceMap[vm] = this;
     struct json_value_s *root = loadFileGetJSON(vm, const_cast<char*>(filepath.ascii().get_data()));
     ::initRuntime(vm);
-    registerForeignFunction(vm, "emit", &QuestVM::emitWrapper);
-    registerForeignFunction(vm, "getResponse", &QuestVM::getresponseWrapper);
-    registerForeignFunction(vm, "response", &response);
+    registerForeignFunction(vm, const_cast<char*>("emit"), (void*)&QuestVM::emitWrapper);
+    registerForeignFunction(vm, const_cast<char*>("getResponse"), (void*)&QuestVM::getresponseWrapper);
+    registerForeignFunction(vm, const_cast<char*>("response"), (void*)&response);
     struct json_object_s *rootObj = json_value_as_object(root);
-    struct json_array_s *inputProgram = get_object_key_as_array(rootObj, "programList");
-    struct json_object_s *labelMap = get_object_key_as_object(rootObj, "labelMap");
+    struct json_array_s *inputProgram = get_object_key_as_array(rootObj, const_cast<char*>("programList"));
+    struct json_object_s *labelMap = get_object_key_as_object(rootObj, const_cast<char*>("labelMap"));
     if (labelMap != NULL) {
         initLabelMapFromJSONObject(vm, labelMap);
     }

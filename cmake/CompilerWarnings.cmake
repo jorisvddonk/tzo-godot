@@ -47,13 +47,13 @@ target_compile_options( ${PROJECT_NAME}
             -Wnon-virtual-dtor
             -Wnull-dereference
             -Woverloaded-virtual
-            -Wpedantic
             -Wshadow
             -Wunused
             -Wwrite-strings
 
             # Disable warnings which bleed through from godot-cpp's macros.
             -Wno-unused-parameter
+            -Wno-unused-but-set-parameter
         >
 
         # Clang only
