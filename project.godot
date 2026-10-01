@@ -1,0 +1,13 @@
+; Engine configuration file.
+; Generated/curated for running the tzo-godot GDScript addon tests.
+
+config_version=5
+
+[application]
+
+config/name="tzo-godot"
+config/features=PackedStringArray("4.7")
+
+[editor_plugins]
+
+enabled=PackedStringArray()

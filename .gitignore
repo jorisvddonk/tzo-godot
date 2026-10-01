@@ -2,3 +2,5 @@ CMakeLists.txt.user
 .vscode
 build/
 .cache/
+.godot/
+*.import

@@ -1,0 +1,9 @@
+{
+	"programList": [
+		{ "type": "push-string-instruction", "value": "B" },
+		{ "type": "push-number-instruction", "value": 2 },
+		{ "type": "invoke-function-instruction", "functionName": "response" },
+		{ "type": "invoke-function-instruction", "functionName": "getResponse" }
+	],
+	"labelMap": {}
+}

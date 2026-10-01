@@ -1,0 +1,9 @@
+{
+	"programList": [
+		{ "type": "push-string-instruction", "value": "Hello " },
+		{ "type": "push-string-instruction", "value": "World" },
+		{ "type": "invoke-function-instruction", "functionName": "rconcat" },
+		{ "type": "invoke-function-instruction", "functionName": "emit" }
+	],
+	"labelMap": {}
+}

@@ -2,7 +2,7 @@
 
 This repository contains an experimental GDExtension extension for Godot that supports [Tzo](https://github.com/jorisvddonk/tzo) and QuestVM. In the future, QuestVM support may be separated out into a separate extension.
 
-Under the hood, this uses the [Tzo-c](https://github.com/jorisvddonk/tzo-c) implementation.
+Under the hood, the native extension uses the [Tzo-c](https://github.com/jorisvddonk/tzo-c) implementation. It is entirely optional: the `addons/tzo` plugin ships a pure-GDScript port of the same VM (`TzoVM`) and a `QuestVM` node that uses the native class (`QuestVMNative`) when the extension is loaded, and transparently falls back to GDScript otherwise.
 
 This repository structure is based on [GDExtensionTemplate](https://github.com/asmaloney/GDExtensionTemplate) and is currently set up to work with the **[Godot 4.5](https://github.com/godotengine/godot/releases/tag/4.5-stable)** release (via [godot-cpp](https://github.com/godotengine/godot-cpp) `godot-4.5-stable`).
 
@@ -16,6 +16,18 @@ To use this locally on your machine, you will need the following:
 - (optional) **[clang-format](https://clang.llvm.org/docs/ClangFormat.html)** for linting and automatic code formatting (CI uses clang-format version 15)
 
 The GitHub actions (CI) are set up to include all of these tools. To see how to download them on your platform, take a look at the [workflow](.github/workflows/main.yml) file.
+
+## Testing
+
+The test suite covers both the GDScript VM and the `QuestVM` node, and (when the native extension has been built) runs parity and instance-isolation checks against the native backend. It needs a Godot binary on your `PATH` (or passed as the first argument):
+
+```sh
+tests/run_tests.sh
+# or: tests/run_tests.sh /Applications/Godot.app/Contents/MacOS/Godot
+```
+
+Native tests require a build (see below); without one they are skipped automatically. Note that every piece of VM state is per-instance in both backends.
+
 
 ## Build & Install
 
@@ -51,6 +63,8 @@ The following additional CMake options are available:
 | `${PROJECT_NAME_UPPERCASE}_WARNING_AS_ERROR` (e.g. FOO_WARNING_AS_ERROR) | Turns warnings into errors.                      | **ON**                                                                                                  |
 
 # Usage
+
+The `addons/tzo` plugin provides a `QuestVM` node you can extend or instantiate. It picks a backend automatically: the native `QuestVMNative` class when the GDExtension is loaded, or the pure-GDScript `TzoVM` otherwise. Set `prefer_native = false` to force the GDScript backend. Both expose the same API, signals, and per-instance state.
 
 More usage information and documentation follows later.
 For now, consider the following code example:

@@ -1,0 +1,6 @@
+{
+	"programList": [
+		{ "type": "invoke-function-instruction", "functionName": "emit" }
+	],
+	"labelMap": {}
+}

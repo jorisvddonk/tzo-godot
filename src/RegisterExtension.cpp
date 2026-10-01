@@ -25,7 +25,7 @@ namespace
         {
             return;
         }
-        godot::ClassDB::register_class<QuestVM>();
+        godot::ClassDB::register_class<QuestVMNative>();
         godot::ClassDB::register_class<GDExtensionTemplate>();
     }
 

@@ -1,0 +1,16 @@
+[configuration]
+
+entry_symbol = "GDExtensionInit"
+compatibility_minimum = 4.1
+
+[libraries]
+
+; Points at the CMake build output so the project can also exercise the native
+; backend when it has been built. Both debug and release map to the release
+; library; missing libraries are non-fatal (the addon falls back to GDScript).
+macos.debug = "build/tzo-godot/lib/Darwin-universal/libtzo-godot.dylib"
+macos.release = "build/tzo-godot/lib/Darwin-universal/libtzo-godot.dylib"
+linux.debug.x86_64 = "build/tzo-godot/lib/Linux-x86_64/libtzo-godot.so"
+linux.release.x86_64 = "build/tzo-godot/lib/Linux-x86_64/libtzo-godot.so"
+windows.debug.x86_64 = "build/tzo-godot/lib/Windows-AMD64/tzo-godot.dll"
+windows.release.x86_64 = "build/tzo-godot/lib/Windows-AMD64/tzo-godot.dll"
