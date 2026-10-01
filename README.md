@@ -37,7 +37,7 @@ Here's an example of how to build & install a release version (use the terminal 
 
 ```sh
 cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=tzo-godot-install
-cmake --build ./build --parallel
+cmake --build ./build --parallel 2
 cmake --install ./build
 ```
 
