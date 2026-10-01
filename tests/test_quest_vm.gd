@@ -17,6 +17,7 @@ func run(t) -> void:
 	_test_instance_isolation(t)
 	_test_clear_response_map(t)
 	_test_missing_file(t)
+	_test_collected_text(t)
 	_test_native_parity(t)
 	_test_native_isolation(t)
 
@@ -151,6 +152,16 @@ func _test_missing_file(t) -> void:
 	vm.free()
 
 
+func _test_collected_text(t) -> void:
+	var vm := _new_script_vm(HELLO)
+	vm.initTzoVM()
+	vm.run()
+	t.eq(vm.getCollectedText(), "Hello World", "getCollectedText returns emitted text")
+	vm.clearCollectedText()
+	t.eq(vm.getCollectedText(), "", "clearCollectedText empties collected text")
+	vm.free()
+
+
 func _test_native_parity(t) -> void:
 	if not ClassDB.class_exists("QuestVMNative"):
 		print("  (skipping native parity tests: native extension not loaded)")
@@ -165,6 +176,7 @@ func _test_native_parity(t) -> void:
 		t.eq(native_result["items"], script_result["items"], "native responses match script for %s" % path)
 		t.eq(native_result["starts"], script_result["starts"], "native getresponse_start matches script")
 		t.eq(native_result["ends"], script_result["ends"], "native getresponse_end matches script")
+		t.eq(native_vm.getCollectedText(), script_vm.getCollectedText(), "native collected text matches script")
 		script_vm.free()
 		native_vm.free()
 

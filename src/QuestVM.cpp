@@ -183,6 +183,16 @@ godot::String QuestVMNative::get_file_path()
     return filepath;
 }
 
+godot::String QuestVMNative::getCollectedText()
+{
+    return godot::String(collectedText.c_str());
+}
+
+void QuestVMNative::clearCollectedText()
+{
+    collectedText.clear();
+}
+
 
 void QuestVMNative::_bind_methods()
 {
@@ -190,6 +200,8 @@ void QuestVMNative::_bind_methods()
     godot::ClassDB::bind_method( godot::D_METHOD( "pushNumber", "num" ), &QuestVMNative::pushNumber );
     godot::ClassDB::bind_method( godot::D_METHOD( "pushString", "str" ), &QuestVMNative::pushString );
     godot::ClassDB::bind_method( godot::D_METHOD( "clearResponseMap" ), &QuestVMNative::clearResponseMap );
+    godot::ClassDB::bind_method( godot::D_METHOD( "getCollectedText" ), &QuestVMNative::getCollectedText );
+    godot::ClassDB::bind_method( godot::D_METHOD( "clearCollectedText" ), &QuestVMNative::clearCollectedText );
     godot::ClassDB::bind_method( godot::D_METHOD( "initTzoVM" ), &QuestVMNative::initTzoVM );
     godot::ClassDB::bind_method( godot::D_METHOD( "run" ), &QuestVMNative::run );
 

@@ -72,6 +72,18 @@ func getResponseMap() -> Dictionary:
 	return response_map
 
 
+func getCollectedText() -> String:
+	if backend == "native":
+		return _native.getCollectedText()
+	return collected_text
+
+
+func clearCollectedText() -> void:
+	collected_text = ""
+	if backend == "native":
+		_native.clearCollectedText()
+
+
 func set_file_path(path: String) -> void:
 	file_path = path
 
@@ -108,6 +120,7 @@ func _init_native() -> void:
 		_init_script()
 		return
 	_native.file_path = file_path
+	collected_text = ""
 	if not _native_connected:
 		_native.questvm_emit.connect(_on_native_emit)
 		_native.questvm_getresponse_start.connect(_on_native_get_response_start)

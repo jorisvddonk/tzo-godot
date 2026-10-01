@@ -33,6 +33,8 @@ public:
     void pushString(godot::String str);
     void set_file_path(godot::String str);
     godot::String get_file_path();
+    godot::String getCollectedText();
+    void clearCollectedText();
 
 protected:
     static void _bind_methods();
