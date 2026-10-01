@@ -1,6 +1,6 @@
 # tzo-godot
 
-This repository contains an experimental GDExtension extension for Godot that supports [Tzo](https://github.com/jorisvddonk/tzo) and QuestVM. In the future, QuestVM support may be separated out into a separate extension.
+This repository contains an experimental GDExtension extension for Godot that supports [Tzo](https://github.com/jorisvddonk/tzo), the VM behind [QuestMark](https://github.com/jorisvddonk/questmark), plus its QuestVM layer. In the future, QuestVM support may be separated out into a separate extension.
 
 Under the hood, the native extension implements the base Tzo VM (`TzoVMNative`) on top of the [Tzo-c](https://github.com/jorisvddonk/tzo-c) implementation. It is entirely optional: the `addons/tzo` plugin ships a pure-GDScript port of the same base VM (`TzoVM`), and the `QuestVM` node runs on whichever base VM is available.
 
@@ -132,6 +132,8 @@ func _questvm_getresponse_end():
 
 ## QuestVM API
 
+This is the Godot-facing API for the QuestVM layer. For what `emit`, `response`, and `getResponse` mean and how programs use them, see the [QuestMark docs](https://jorisvddonk.github.io/questmark/) and [QuestVM](https://github.com/jorisvddonk/questmark/blob/master/src/QuestVM.ts).
+
 ### Properties
 
 | Property          | Type       | Description                                                                    |
@@ -175,66 +177,15 @@ func _questvm_getresponse_end():
 - `push_number(num)` / `push_string(str)`, `pop()`, `top()`
 - `get_stack_size()`, `get_program_size()`, `get_ppc()` / `set_ppc(pc)`, `is_exited()`
 - `as_string(value)`
-- Output: `get_output()` / `clear_output()` / `set_stdout_sink(Callable)` (native), or the `output`/`stdout_sink` properties (GDScript)
+- Output: `get_output()` / `clear_output()` / `set_stdout_sink(Callable)`
 
 Foreign functions are registered as `Callable`s and invoked with the VM instance. The GDScript class additionally exposes `stack`, `program`, `context`, `label_map`, and `errors` directly.
 
-## Program format
+## Program format and opcodes
 
-A compiled program is a JSON object with a `programList` array of instructions and a `labelMap` mapping label names to instruction indices:
+This extension only *implements* Tzo, QuestVM, and QuestMark — it does not define them. Go to the upstream repositories for the program format, opcodes, and how to author programs:
 
-```json
-{
-	"programList": [
-		{ "type": "push-string-instruction", "value": "Hello " },
-		{ "type": "push-string-instruction", "value": "World" },
-		{ "type": "invoke-function-instruction", "functionName": "rconcat" },
-		{ "type": "invoke-function-instruction", "functionName": "emit" }
-	],
-	"labelMap": {}
-}
-```
+- **[Tzo](https://github.com/jorisvddonk/tzo)** — the VM, its opcode set, standard representation, and [examples](https://github.com/jorisvddonk/tzo/tree/master/examples).
+- **[Tzo-c](https://github.com/jorisvddonk/tzo-c)** — the C runtime this extension wraps; ships sample programs (`spathi.json`, `yehat.json`, `test.json`).
+- **[QuestMark](https://github.com/jorisvddonk/questmark)** — the Markdown-based language that compiles to Tzo. See its [documentation](https://jorisvddonk.github.io/questmark/) and playable [examples](https://github.com/jorisvddonk/questmark/tree/master/examples) (`space_alien.md`, `self-describing.md`).
 
-Instructions may carry `type`, `value`, `label`, and `functionName`:
-
-- `"push-number-instruction"` / `"push-string-instruction"` push `value`.
-- `"invoke-function-instruction"` calls the opcode or foreign function named by `functionName`.
-- `label` (on any instruction) registers that instruction's index under the given name.
-
-## Opcodes
-
-Built-in opcodes (with `functionName` aliases in parentheses). `top` is the value on top of the stack.
-
-| Opcode                         | Description                                                                 |
-|--------------------------------|-----------------------------------------------------------------------------|
-| `nop`                          | Does nothing.                                                               |
-| `plus` (`+`)                   | Pushes `top + second`.                                                      |
-| `min` (`-`)                    | Pushes `top - second`.                                                      |
-| `mul` (`*`)                    | Pushes `top * second`.                                                      |
-| `pop`                          | Discards the top value.                                                     |
-| `dup`                          | Duplicates the top value.                                                   |
-| `stdout`                       | Writes the top value to `output` (and `stdout_sink` if set).                |
-| `concat`                       | Pushes `top + second` as strings.                                           |
-| `rconcat`                      | Pushes `second + top` as strings.                                           |
-| `charCode`                     | Pops a number, pushes its UTF-8 character.                                  |
-| `randInt`                      | Pops `n`, pushes `floor(rand() * n)` (integer, in `[0, n)`).                |
-| `eq`                           | Pushes `1` if the two values have the same type and are equal, else `0`.    |
-| `and` / `or` / `not`           | Boolean logic on numbers (`0`/`1`).                                         |
-| `gt` / `lt`                    | Pushes `1` if `top > second` / `top < second`, else `0`.                    |
-| `ppc`                          | Pushes the current instruction index.                                       |
-| `stacksize`                    | Pushes the current stack size.                                              |
-| `jz`                           | Pops a number; if `0`, skips the next instruction.                          |
-| `jgz`                          | Pops a number; if `> 0`, skips the next instruction.                        |
-| `{` / `}`                      | Block markers; `{` jumps past the matching `}`.                             |
-| `goto`                         | Pops a label name or numeric index and jumps there.                         |
-| `setContext` / `getContext`    | Store/read a value in the VM's context map (key is pushed on top).          |
-| `hasContext` / `delContext`    | Test for / remove a context key.                                            |
-| `pause` / `exit`               | Stop the run loop (`exit` also marks the VM exited).                        |
-
-Foreign functions provided by the `QuestVM` layer:
-
-| Function      | Description                                                                 |
-|---------------|-----------------------------------------------------------------------------|
-| `emit`        | Pops a value, appends it to the collected text, and emits `questvm_emit`.   |
-| `response`    | Pops a `pc` (number) and response text, registering a selectable response.  |
-| `getResponse` | Pauses the VM and emits the start/item/end response signals.                |
