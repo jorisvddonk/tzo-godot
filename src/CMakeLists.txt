@@ -2,8 +2,8 @@
 
 target_sources( ${PROJECT_NAME}
     PRIVATE
-        QuestVM.h
-        QuestVM.cpp
+        TzoVMNative.h
+        TzoVMNative.cpp
         GDExtensionTemplate.h
         GDExtensionTemplate.cpp
         RegisterExtension.cpp

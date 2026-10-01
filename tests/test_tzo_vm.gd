@@ -20,6 +20,7 @@ func run(t) -> void:
 	_test_as_string(t)
 	_test_stdout(t)
 	_test_errors(t)
+	_test_native_vm(t)
 
 
 # --- Helpers ---------------------------------------------------------------
@@ -261,6 +262,48 @@ func _test_errors(t) -> void:
 
 
 # --- Small utilities -------------------------------------------------------
+
+func _test_native_vm(t) -> void:
+	if not ClassDB.class_exists("TzoVMNative"):
+		print("  (skipping native TzoVM tests: native extension not loaded)")
+		return
+
+	var vm = ClassDB.instantiate("TzoVMNative")
+	vm.init_runtime()
+	vm.init_program_list_from_json_array([_n(2), _n(3), _f("+")])
+	vm.run()
+	t.eq(vm.top(), 5.0, "native TzoVM: 2 3 + == 5")
+	t.eq(vm.get_stack_size(), 1, "native TzoVM: stack size")
+	t.eq(vm.get_program_size(), 3, "native TzoVM: program size")
+	t.eq(vm.get_ppc(), 3, "native TzoVM: ppc at end")
+
+	var calls: Array = []
+	var vm2 = ClassDB.instantiate("TzoVMNative")
+	vm2.init_runtime()
+	vm2.register_foreign_function("record", func(target): calls.append(target))
+	vm2.init_program_list_from_json_array([_s("hi"), _f("record")])
+	vm2.run()
+	t.eq(calls.size(), 1, "native TzoVM: foreign callable invoked")
+	t.eq(calls[0], vm2, "native TzoVM: foreign callable receives the VM")
+
+	var vm3 = ClassDB.instantiate("TzoVMNative")
+	vm3.init_runtime()
+	vm3.init_program_list_from_json_array([_n(3), _f("stdout")])
+	vm3.run()
+	t.eq(Array(vm3.get_output()), ["3"], "native TzoVM: stdout captured")
+	t.eq(vm3.as_string(3.5), "3.500000", "native TzoVM: as_string matches")
+
+	var vm4 = ClassDB.instantiate("TzoVMNative")
+	vm4.init_runtime()
+	vm4.init_program_list_from_json_array(
+		[
+			_n(10), _s("k"), _f("setContext"),
+			_s("k"), _f("getContext"),
+		]
+	)
+	vm4.run()
+	t.eq(vm4.top(), 10.0, "native TzoVM: context round-trips")
+
 
 func _one(program: Array, labels := {}):
 	var vm = _make(program, labels)

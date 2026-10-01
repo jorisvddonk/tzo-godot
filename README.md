@@ -2,7 +2,7 @@
 
 This repository contains an experimental GDExtension extension for Godot that supports [Tzo](https://github.com/jorisvddonk/tzo) and QuestVM. In the future, QuestVM support may be separated out into a separate extension.
 
-Under the hood, the native extension uses the [Tzo-c](https://github.com/jorisvddonk/tzo-c) implementation. It is entirely optional: the `addons/tzo` plugin ships a pure-GDScript port of the same VM (`TzoVM`) and a `QuestVM` node that uses the native class (`QuestVMNative`) when the extension is loaded, and transparently falls back to GDScript otherwise.
+Under the hood, the native extension implements the base Tzo VM (`TzoVMNative`) on top of the [Tzo-c](https://github.com/jorisvddonk/tzo-c) implementation. It is entirely optional: the `addons/tzo` plugin ships a pure-GDScript port of the same base VM (`TzoVM`), and the `QuestVM` node runs on whichever base VM is available.
 
 This repository structure is based on [GDExtensionTemplate](https://github.com/asmaloney/GDExtensionTemplate) and is currently set up to work with the **[Godot 4.5](https://github.com/godotengine/godot/releases/tag/4.5-stable)** release (via [godot-cpp](https://github.com/godotengine/godot-cpp) `godot-4.5-stable`).
 
@@ -11,7 +11,7 @@ This repository structure is based on [GDExtensionTemplate](https://github.com/a
 | Path              | Contents                                                                                     |
 |-------------------|----------------------------------------------------------------------------------------------|
 | `addons/tzo/`     | The Godot addon: GDScript `TzoVM` and `QuestVM`, plus an (empty) editor plugin.              |
-| `src/`            | Native GDExtension: `QuestVMNative`, `GDExtensionTemplate`, and extension registration.      |
+| `src/`            | Native GDExtension: `TzoVMNative`, `GDExtensionTemplate`, and registration.                  |
 | `templates/`      | `.gdextension` templates that CMake fills in and installs.                                    |
 | `tests/`          | Headless Godot test suite plus `run_tests.sh`.                                               |
 | `extern/`         | Submodules: `godot-cpp` and `tzo-c`.                                                         |
@@ -19,14 +19,14 @@ This repository structure is based on [GDExtensionTemplate](https://github.com/a
 
 ## Backends
 
-There are two interchangeable backends. Both expose the same `QuestVM` API, emit the same signals, and keep **all state per-instance** (no process-wide globals).
+The quest layer (`QuestVM` / [quest_vm.gd](addons/tzo/quest_vm.gd)) is a single GDScript implementation with no backend-specific code. It runs on top of a **base VM**, which has two interchangeable implementations that share one API and keep **all state per-instance**:
 
-| Backend  | Class            | Notes                                                                                  |
-|----------|------------------|----------------------------------------------------------------------------------------|
-| Native   | `QuestVMNative`  | C++ GDExtension built on `tzo-c`. Faster. Loaded only when the extension is present.   |
-| GDScript | `TzoVM`          | Pure-GDScript port of the same VM. Always available; used as the fallback.             |
+| Base VM  | Class          | Notes                                                                              |
+|----------|----------------|------------------------------------------------------------------------------------|
+| Native   | `TzoVMNative`  | C++ GDExtension built on `tzo-c`. Faster. Loaded only when the extension is present. |
+| GDScript | `TzoVM`        | Pure-GDScript port of the same VM. Always available; used as the fallback.          |
 
-`QuestVM` auto-detects the native class at `initTzoVM()` time. Set `prefer_native = false` to force the GDScript backend (useful for testing or platforms without binaries). `backend` reports which one was chosen (`"native"` or `"script"`).
+`QuestVM` auto-detects the native base VM at `initTzoVM()` time. Set `prefer_native = false` to force the GDScript backend (useful for testing or platforms without binaries). `backend` reports which one was chosen (`"native"` or `"script"`).
 
 ## Prerequisites
 
@@ -165,15 +165,19 @@ func _questvm_getresponse_end():
 | `questvm_getresponse_item(id: int, pc: int, response_text: String)`  | Fired once per registered response.                             |
 | `questvm_getresponse_end()`                                          | Fired after all responses have been reported.                   |
 
-## TzoVM (GDScript)
+## TzoVM (base VM)
 
-`TzoVM` is a `RefCounted` implementation of the base stack VM. You normally use it indirectly through `QuestVM`, but it is usable on its own:
+`TzoVM` (GDScript) and `TzoVMNative` (C++) are the base stack VM. You normally use them indirectly through `QuestVM`, but they are usable standalone. Both expose the same methods:
 
 - `init_runtime()`, `register_foreign_function(name, Callable)`
 - `load_file_get_json(path) -> Dictionary`, `init_label_map_from_json_object(obj)`, `init_program_list_from_json_array(array)`
 - `run()`, `step()`, `pause()`, `resume()`
-- `as_string(value)`, `as_int_f(value)`
-- State: `stack`, `program`, `ppc`, `context`, `label_map`, `foreign_functions`, `errors`, `output`, `stdout_sink`
+- `push_number(num)` / `push_string(str)`, `pop()`, `top()`
+- `get_stack_size()`, `get_program_size()`, `get_ppc()` / `set_ppc(pc)`, `is_exited()`
+- `as_string(value)`
+- Output: `get_output()` / `clear_output()` / `set_stdout_sink(Callable)` (native), or the `output`/`stdout_sink` properties (GDScript)
+
+Foreign functions are registered as `Callable`s and invoked with the VM instance. The GDScript class additionally exposes `stack`, `program`, `context`, `label_map`, and `errors` directly.
 
 ## Program format
 

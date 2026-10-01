@@ -57,7 +57,7 @@ func _test_backend_selection(t) -> void:
 	var auto := QuestVM.new()
 	auto.file_path = HELLO
 	auto.initTzoVM()
-	var expected := "native" if ClassDB.class_exists("QuestVMNative") else "script"
+	var expected := "native" if ClassDB.class_exists("TzoVMNative") else "script"
 	t.eq(auto.backend, expected, "auto backend matches available native class")
 	auto.free()
 
@@ -163,7 +163,7 @@ func _test_collected_text(t) -> void:
 
 
 func _test_native_parity(t) -> void:
-	if not ClassDB.class_exists("QuestVMNative"):
+	if not ClassDB.class_exists("TzoVMNative"):
 		print("  (skipping native parity tests: native extension not loaded)")
 		return
 
@@ -182,7 +182,7 @@ func _test_native_parity(t) -> void:
 
 
 func _test_native_isolation(t) -> void:
-	if not ClassDB.class_exists("QuestVMNative"):
+	if not ClassDB.class_exists("TzoVMNative"):
 		print("  (skipping native isolation tests: native extension not loaded)")
 		return
 

@@ -115,6 +115,56 @@ func _pop():
 	return stack.pop_back()
 
 
+# --- Public stack/state API (mirrors TzoVMNative) --------------------------
+
+func pop():
+	return _pop()
+
+
+func top():
+	return _top()
+
+
+func push_number(num: float) -> void:
+	_push(float(num))
+
+
+func push_string(str: String) -> void:
+	_push(str)
+
+
+func get_stack_size() -> int:
+	return stack_size
+
+
+func get_program_size() -> int:
+	return program_size
+
+
+func get_ppc() -> int:
+	return ppc
+
+
+func set_ppc(value: int) -> void:
+	ppc = value
+
+
+func is_exited() -> bool:
+	return exited
+
+
+func get_output() -> Array:
+	return output
+
+
+func clear_output() -> void:
+	output.clear()
+
+
+func set_stdout_sink(sink: Callable) -> void:
+	stdout_sink = sink
+
+
 # --- Value helpers ---------------------------------------------------------
 
 static func _is_number(value) -> bool:

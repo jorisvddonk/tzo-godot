@@ -1,10 +1,11 @@
-## QuestVM: GDScript implementation of the Tzo quest virtual machine.
+## QuestVM: the Tzo quest layer (emit / getResponse / response).
 ##
-## Runs on the pure-GDScript [TzoVM] by default, and transparently delegates to
-## the native GDExtension class `QuestVMNative` when it is available (faster).
-## Both backends expose the same methods and signals.
+## This is the single implementation of the quest layer. It runs on top of a
+## base VM, which is either the native [TzoVMNative] (when the GDExtension is
+## loaded) or the pure-GDScript [TzoVM]. Both base VMs expose the same API, so
+## this script contains no backend-specific code.
 ##
-## All state (stack, context, response map, collected text) is per-instance.
+## All state (response map, collected text) is per-instance.
 class_name QuestVM
 extends Node
 
@@ -14,12 +15,12 @@ signal questvm_getresponse_item(id: int, pc: int, response_text: String)
 signal questvm_getresponse_end()
 
 const TzoVMScript := preload("res://addons/tzo/tzo_vm.gd")
-const NATIVE_CLASS := "QuestVMNative"
+const NATIVE_CLASS := "TzoVMNative"
 
 @export_file("*.json") var file_path: String = ""
 @export var prefer_native: bool = true
 
-## Which backend is actually in use: "native" or "script".
+## Which base VM is in use: "native" or "script". Set after initTzoVM().
 var backend: String = "script"
 ## Responses registered by the `response` opcode, keyed by insertion index.
 var response_map: Dictionary = {}
@@ -27,44 +28,40 @@ var response_map: Dictionary = {}
 var collected_text: String = ""
 
 var _vm = null
-var _native: Node = null
-var _native_connected: bool = false
 
 
 # --- Public API ------------------------------------------------------------
 
 func initTzoVM() -> void:
 	_detect_backend()
-	if backend == "native":
-		_init_native()
-	else:
-		_init_script()
+	_vm = _make_base_vm()
+	_vm.init_runtime()
+	_vm.register_foreign_function("emit", _foreign_emit)
+	_vm.register_foreign_function("getResponse", _foreign_get_response)
+	_vm.register_foreign_function("response", _foreign_response)
+	var root: Dictionary = _vm.load_file_get_json(file_path)
+	_vm.init_label_map_from_json_object(root.get("labelMap", {}))
+	_vm.init_program_list_from_json_array(root.get("programList", []))
+	response_map.clear()
+	collected_text = ""
 
 
 func run() -> void:
-	if backend == "native":
-		_native.run()
-	else:
+	if _vm != null:
 		_vm.run()
 
 
 func pushNumber(num: float) -> void:
-	if backend == "native":
-		_native.pushNumber(num)
-	else:
-		_vm._push(float(num))
+	if _vm != null:
+		_vm.push_number(num)
 
 
 func pushString(str: String) -> void:
-	if backend == "native":
-		_native.pushString(str)
-	else:
-		_vm._push(str)
+	if _vm != null:
+		_vm.push_string(str)
 
 
 func clearResponseMap() -> void:
-	if backend == "native":
-		_native.clearResponseMap()
 	response_map.clear()
 
 
@@ -73,15 +70,11 @@ func getResponseMap() -> Dictionary:
 
 
 func getCollectedText() -> String:
-	if backend == "native":
-		return _native.getCollectedText()
 	return collected_text
 
 
 func clearCollectedText() -> void:
 	collected_text = ""
-	if backend == "native":
-		_native.clearCollectedText()
 
 
 func set_file_path(path: String) -> void:
@@ -100,51 +93,27 @@ func _detect_backend() -> void:
 		backend = "native"
 
 
-func _init_script() -> void:
-	_vm = TzoVMScript.new()
-	_vm.init_runtime()
-	_vm.register_foreign_function("emit", Callable(self, "_foreign_emit"))
-	_vm.register_foreign_function("getResponse", Callable(self, "_foreign_get_response"))
-	_vm.register_foreign_function("response", Callable(self, "_foreign_response"))
-	var root: Dictionary = _vm.load_file_get_json(file_path)
-	_vm.init_label_map_from_json_object(root.get("labelMap", {}))
-	_vm.init_program_list_from_json_array(root.get("programList", []))
-	response_map.clear()
-	collected_text = ""
-
-
-func _init_native() -> void:
-	_native = ClassDB.instantiate(NATIVE_CLASS) as Node
-	if _native == null:
+func _make_base_vm():
+	if backend == "native":
+		var native = ClassDB.instantiate(NATIVE_CLASS)
+		if native != null:
+			return native
 		backend = "script"
-		_init_script()
-		return
-	_native.file_path = file_path
-	collected_text = ""
-	if not _native_connected:
-		_native.questvm_emit.connect(_on_native_emit)
-		_native.questvm_getresponse_start.connect(_on_native_get_response_start)
-		_native.questvm_getresponse_item.connect(_on_native_get_response_item)
-		_native.questvm_getresponse_end.connect(_on_native_get_response_end)
-		_native_connected = true
-	if is_inside_tree() and not _native.is_inside_tree():
-		add_child(_native)
-	_native.initTzoVM()
+	return TzoVMScript.new()
 
 
-# --- Script backend foreign functions --------------------------------------
+# --- Quest layer foreign functions -----------------------------------------
 
 func _foreign_emit(vm) -> void:
-	var text: String = vm.as_string(vm._pop())
+	var text: String = vm.as_string(vm.pop())
 	collected_text += text
 	questvm_emit.emit(text)
 
 
 func _foreign_response(vm) -> void:
-	var pc = vm._pop()
-	var text = vm._pop()
-	var key := response_map.size() + 1
-	response_map[key] = {"pc": int(pc), "response": vm.as_string(text)}
+	var pc = vm.pop()
+	var text = vm.pop()
+	response_map[response_map.size() + 1] = {"pc": int(pc), "response": String(vm.as_string(text))}
 
 
 func _foreign_get_response(vm) -> void:
@@ -157,23 +126,4 @@ func _foreign_get_response(vm) -> void:
 		var answer: Dictionary = response_map[key]
 		questvm_getresponse_item.emit(id, int(answer["pc"]), String(answer["response"]))
 		id += 1
-	questvm_getresponse_end.emit()
-
-
-# --- Native backend re-emitters --------------------------------------------
-
-func _on_native_emit(text: String) -> void:
-	collected_text += text
-	questvm_emit.emit(text)
-
-
-func _on_native_get_response_start() -> void:
-	questvm_getresponse_start.emit()
-
-
-func _on_native_get_response_item(id: int, pc: int, response_text: String) -> void:
-	questvm_getresponse_item.emit(id, pc, response_text)
-
-
-func _on_native_get_response_end() -> void:
 	questvm_getresponse_end.emit()

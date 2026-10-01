@@ -6,7 +6,7 @@
 #include "godot_cpp/core/defs.hpp"
 #include "godot_cpp/godot.hpp"
 
-#include "QuestVM.h"
+#include "TzoVMNative.h"
 #include "GDExtensionTemplate.h"
 
 /// @file
@@ -25,7 +25,7 @@ namespace
         {
             return;
         }
-        godot::ClassDB::register_class<QuestVMNative>();
+        godot::ClassDB::register_class<TzoVMNative>();
         godot::ClassDB::register_class<GDExtensionTemplate>();
     }
 
