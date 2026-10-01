@@ -4,7 +4,7 @@ This repository contains an experimental GDExtension extension for Godot that su
 
 Under the hood, this uses the [Tzo-c](https://github.com/jorisvddonk/tzo-c) implementation.
 
-This repository structure is based on [GDExtensionTemplate](https://github.com/asmaloney/GDExtensionTemplate) and is currently set up to work with the **[Godot 4.4.1](https://github.com/godotengine/godot/releases/tag/4.4.1-stable)** release.
+This repository structure is based on [GDExtensionTemplate](https://github.com/asmaloney/GDExtensionTemplate) and is currently set up to work with the **[Godot 4.5](https://github.com/godotengine/godot/releases/tag/4.5-stable)** release (via [godot-cpp](https://github.com/godotengine/godot-cpp) `godot-4.5-stable`).
 
 ## Prerequisites
 

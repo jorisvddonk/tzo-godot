@@ -114,7 +114,7 @@ if ( NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/extern/godot-cpp/Makefile" )
     )
 endif()
 
-set( GODOT_CPP_SYSTEM_HEADERS ON CACHE BOOL "" FORCE )
+set( GODOTCPP_SYSTEM_HEADERS ON CACHE BOOL "" FORCE )
 
 add_subdirectory( extern/godot-cpp )
 add_subdirectory( extern/tzo-c )
